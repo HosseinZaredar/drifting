@@ -5,6 +5,9 @@ def main():
     parser.add_argument("--config", type=str, required=True, help="Path to YAML config.")
     parser.add_argument("--gen", action="store_true", help="Run generator training loop. Default runs MAE training.")
     parser.add_argument("--workdir", type=str, default="runs", help="Local workdir root for checkpoints/logs.")
+    parser.add_argument("--eval-batch-size", type=int, default=None, help="Override dataset.eval_batch_size from config.")
+    parser.add_argument("--learning-rate", type=float, default=None, help="Override optimizer.lr_schedule.learning_rate from config.")
+    parser.add_argument("--train-batch-size", type=int, default=None, help="Override train.train_batch_size from config.")
     args = parser.parse_args()
     args.output_dir = args.workdir
 

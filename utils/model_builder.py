@@ -16,7 +16,7 @@ def create_learning_rate_fn(
 ):
     """Create warmup + main learning-rate schedule."""
     warmup_fn = optax.linear_schedule(
-        init_value=1e-6,
+        init_value=0.0,
         end_value=learning_rate,
         transition_steps=warmup_steps,
     )

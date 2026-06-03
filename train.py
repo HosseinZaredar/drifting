@@ -302,7 +302,7 @@ def train_gen(
 
         # do push to memory bank; per host 
         goal = push_per_step
-        if initial_step > 0 and step == initial_step:
+        if step == initial_step:
             goal = push_at_resume * push_per_step
             print(f"pushing at resume: {goal}")
         while True:
@@ -359,7 +359,7 @@ def train_gen(
             mu.sync_global_devices("save checkpoint finished")
 
         if (step % eval_per_step == 0) or (step == 1) or (step == total_steps):
-            is_sanity = (step == 1)  # do a sanity check, to make sure FID env is working
+            is_sanity = False
 
             n_samples = 500 if is_sanity else eval_samples
             folder_prefix = "sanity" if is_sanity else "CFG"
@@ -464,6 +464,12 @@ def main_gen(config, output_dir="runs"):
 def main(args):
     run_init()
     config = load_config(args.config)
+    if getattr(args, "eval_batch_size", None) is not None:
+        config.dataset.eval_batch_size = args.eval_batch_size
+    if getattr(args, "learning_rate", None) is not None:
+        config.optimizer.lr_schedule.learning_rate = args.learning_rate
+    if getattr(args, "train_batch_size", None) is not None:
+        config.train.train_batch_size = args.train_batch_size
     main_gen(config, output_dir=args.workdir)
 
 if __name__ == "__main__":
