@@ -3,7 +3,7 @@ hsdp_dim: 8
 logging:
   project: "drift-finetune"
   entity: "hossein-zaredar"
-  use_wandb: false
+  use_wandb: true
   log_every_k: 20
 
 dataset:
