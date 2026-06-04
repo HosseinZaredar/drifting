@@ -1,5 +1,8 @@
 from __future__ import annotations
 
+import os
+import shutil
+import tempfile
 from pathlib import Path
 from typing import Any, Dict, Optional
 
@@ -10,6 +13,28 @@ from flax.training import checkpoints
 from jax.experimental import multihost_utils as mu
 
 from utils.logging import log_for_0
+
+
+def _write_bytes(path: Path, data: bytes) -> None:
+    """Write bytes via a local temp file to avoid gcsfuse stale-handle errors."""
+    with tempfile.NamedTemporaryFile(delete=False) as tmp:
+        tmp.write(data)
+        tmp_path = tmp.name
+    try:
+        shutil.copy2(tmp_path, str(path))
+    finally:
+        os.unlink(tmp_path)
+
+
+def _write_text(path: Path, text: str) -> None:
+    """Write text via a local temp file to avoid gcsfuse stale-handle errors."""
+    with tempfile.NamedTemporaryFile(delete=False, mode='w', encoding='utf-8') as tmp:
+        tmp.write(text)
+        tmp_path = tmp.name
+    try:
+        shutil.copy2(tmp_path, str(path))
+    finally:
+        os.unlink(tmp_path)
 
 
 def _to_python_int(x) -> int:
@@ -96,23 +121,25 @@ def save_params_ema_artifact(
     - `checkpoints/` stores resumable TrainState snapshots.
     - `params_ema/` stores the exported EMA params + metadata used by restore/infer/HF flows.
     """
-    cpu_ema = mu.process_allgather(state.ema_params)
+    cpu_ema = mu.process_allgather(state.ema_params)  # collective — all hosts must call
     step = _to_python_int(state.step)
     ema_decay = float(getattr(state, "ema_decay"))
 
-    out_dir = _output_root(workdir) / "params_ema"
-    out_dir.mkdir(parents=True, exist_ok=True)
-    (out_dir / "ema_params.msgpack").write_bytes(serialization.msgpack_serialize(cpu_ema))
+    if jax.process_index() == 0:
+        out_dir = _output_root(workdir) / "params_ema"
+        out_dir.mkdir(parents=True, exist_ok=True)
+        _write_bytes(out_dir / "ema_params.msgpack", serialization.msgpack_serialize(cpu_ema))
 
-    metadata = {
-        "format": "flax.msgpack",
-        "kind": kind,
-        "backend": "jax",
-        "ema_decay": ema_decay,
-        "step": step,
-        "path": "params_ema/ema_params.msgpack",
-        "model_config": dict(model_config or {}),
-    }
-    (out_dir / "metadata.json").write_text(json.dumps(metadata, indent=2) + "\n", encoding="utf-8")
-    log_for_0("Saved EMA params artifact step %d to %s", step, str(out_dir))
-    return out_dir
+        metadata = {
+            "format": "flax.msgpack",
+            "kind": kind,
+            "backend": "jax",
+            "ema_decay": ema_decay,
+            "step": step,
+            "path": "params_ema/ema_params.msgpack",
+            "model_config": dict(model_config or {}),
+        }
+        _write_text(out_dir / "metadata.json", json.dumps(metadata, indent=2) + "\n")
+        log_for_0("Saved EMA params artifact step %d to %s", step, str(out_dir))
+        return out_dir
+    return _output_root(workdir) / "params_ema"
