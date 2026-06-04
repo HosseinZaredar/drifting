@@ -8,6 +8,7 @@ def main():
     parser.add_argument("--eval-batch-size", type=int, default=None, help="Override dataset.eval_batch_size from config.")
     parser.add_argument("--learning-rate", type=float, default=None, help="Override optimizer.lr_schedule.learning_rate from config.")
     parser.add_argument("--train-batch-size", type=int, default=None, help="Override train.train_batch_size from config.")
+    parser.add_argument("--init-from", type=str, default=None, help="Initial checkpoint path or hf:// URI. Ignored if resuming from an existing checkpoint.")
     args = parser.parse_args()
     args.output_dir = args.workdir
 

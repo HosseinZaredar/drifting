@@ -470,6 +470,8 @@ def main(args):
         config.optimizer.lr_schedule.learning_rate = args.learning_rate
     if getattr(args, "train_batch_size", None) is not None:
         config.train.train_batch_size = args.train_batch_size
+    if getattr(args, "init_from", None) is not None:
+        config.train.init_from = args.init_from
     main_gen(config, output_dir=args.workdir)
 
 if __name__ == "__main__":
