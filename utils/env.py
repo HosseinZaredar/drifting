@@ -4,8 +4,8 @@ from __future__ import annotations
 
 import os
 
-IMAGENET_PATH = "/dev/shm/drift-497721-data/latent_cache"
-IMAGENET_CACHE_PATH = "/dev/shm/drift-497721-data/latent_cache"
+IMAGENET_PATH = "/dev/shm/latent_cache"
+IMAGENET_CACHE_PATH = "/dev/shm/latent_cache"
 IMAGENET_FID_NPZ = "~/gcs/stats/imagenet_256_fid_stats.npz"
 IMAGENET_PR_NPZ = "~/gcs/stats/imagenet_val_prc_arr0.npz"
 
