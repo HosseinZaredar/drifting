@@ -136,10 +136,14 @@ def train_step(state: TrainState, labels, samples, negative_samples, feature_par
             loss_per_feature = jax.tree.map(feature_loss, sg_features, gen_features)
             total_loss = 0
             total_info = dict()
+            sum_info = dict()
             for k, v in loss_per_feature.items():
                 total_loss = total_loss + v[0].mean()
                 for k2, v2 in v[1].items():
                     total_info[f'{k2}/{k}'] = v2
+                    sum_info[k2] = sum_info.get(k2, 0) + v2
+            for k2, v2 in sum_info.items():
+                total_info[f'{k2}/sum'] = v2
             total_loss = total_loss.mean()
             total_info = jax.tree.map(lambda x: x.mean(), total_info)
 
